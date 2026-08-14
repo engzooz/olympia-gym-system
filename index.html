@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olympia Gym | Advanced Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    
+    <!-- Login Screen -->
+    <div id="login-section" class="screen active card-panel">
+        <div class="logo-area">
+            <h1>OLYMPIA</h1>
+            <p>GYM MANAGEMENT</p>
+        </div>
+        <input type="password" id="pin-input" placeholder="Enter Security PIN">
+        <button onclick="login()" class="btn-primary">ACCESS SYSTEM</button>
+        <p id="login-error" class="error-text"></p>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard-section" class="screen card-panel wide">
+        <div class="header">
+            <div>
+                <p class="subtitle">Welcome Back,</p>
+                <h2 id="welcome-msg" style="margin:0;">Captain</h2>
+            </div>
+            <button onclick="logout()" class="btn-icon">⏻</button>
+        </div>
+
+        <!-- Dashboard Stats Widgets (Revenue, Dues, Attendance) -->
+        <div class="stats-overview">
+            <div class="stat-card">
+                <span class="stat-title">MEMBERS</span>
+                <span class="stat-num" id="stat-total">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">TODAY ATTENDANCE</span>
+                <span class="stat-num highlight" id="stat-today">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">COLLECTED REVENUE</span>
+                <span class="stat-num" id="stat-revenue">0 L.E</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">PENDING DUES</span>
+                <span class="stat-num warning" id="stat-pending">0 L.E</span>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button onclick="showSection('register-section')" class="btn-secondary">+ REGISTER TRAINEE</button>
+            <button onclick="startScannerScreen()" class="btn-primary">📷 CAMERA SCANNER</button>
+            <button onclick="showMembersScreen()" class="btn-secondary">👥 MEMBERS DIRECTORY</button>
+            <button onclick="showReportsScreen()" class="btn-secondary">📊 ADVANCED REPORTS</button>
+            <button id="excel-btn" onclick="exportExcel()" class="btn-outline" style="display: none;">EXPORT EXCEL</button>
+        </div>
+
+        <div class="today-section">
+            <h3>TODAY'S ATTENDANCE LOG</h3>
+            <div id="today-list" class="today-list">
+                <p style="color: #666; font-size: 12px;">No attendees recorded yet today.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Trainee Screen with Fees & Dates -->
+    <div id="register-section" class="screen card-panel wide">
+        <h2>NEW MEMBER ENTRY</h2>
+        <div class="input-grid">
+            <input type="text" id="t-name" placeholder="Full Name">
+            <input type="text" id="t-phone" placeholder="Phone Number">
+            <input type="number" id="t-weight" placeholder="Weight (KG)">
+            <input type="number" id="t-height" placeholder="Height (CM)">
+            <input type="number" id="t-total-fee" placeholder="Total Subscription Fee">
+            <input type="number" id="t-paid-fee" placeholder="Amount Paid Now">
+            <div class="input-group-date">
+                <label>Start Date</label>
+                <input type="date" id="t-start-date">
+            </div>
+            <div class="input-group-date">
+                <label>End Date (Expiry)</label>
+                <input type="date" id="t-end-date">
+            </div>
+        </div>
+        <button onclick="registerTrainee()" class="btn-primary mt-2">SAVE & GENERATE QR</button>
+        <button onclick="showSection('dashboard-section')" class="btn-ghost">CANCEL</button>
+        <div id="qr-result"></div>
+    </div>
+
+    <!-- All Members Screen -->
+    <div id="members-section" class="screen card-panel wide">
+        <div class="header">
+            <h2>ALL GYM MEMBERS</h2>
+            <button onclick="showSection('dashboard-section')" class="btn-ghost">BACK</button>
+        </div>
+        <input type="text" id="member-search" oninput="filterMembers()" placeholder="🔍 Search member by name or phone...">
+        <div class="members-table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>PHONE</th>
+                        <th>PAID</th>
+                        <th>REMAINING</th>
+                        <th>EXPIRES</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="members-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Reports Screen (Feature 5) -->
+    <div id="reports-section" class="screen card-panel wide">
+        <div class="header">
+            <h2>CUSTOM ATTENDANCE REPORTS</h2>
+            <button onclick="showSection('dashboard-section')" class="btn-ghost">BACK</button>
+        </div>
+        <div class="report-filters">
+            <div>
+                <label style="font-size: 10px; color: #888;">From Date:</label>
+                <input type="date" id="report-start">
+            </div>
+            <div>
+                <label style="font-size: 10px; color: #888;">To Date:</label>
+                <input type="date" id="report-end">
+            </div>
+            <button onclick="loadCustomReports()" class="btn-primary" style="margin-top: 18px;">FILTER</button>
+        </div>
+        <div class="members-table-container" style="margin-top: 15px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>NAME</th>
+                        <th>PHONE</th>
+                        <th>DATE</th>
+                        <th>TIME</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Camera Scanner & Profile Screen with Expiry Alert (Feature 1) -->
+    <div id="attendance-section" class="screen card-panel wide">
+        <h2>CAMERA SCANNER</h2>
+        <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 15px;"></div>
+        
+        <button onclick="stopScannerAndBack()" class="btn-ghost">BACK TO DASHBOARD</button>
+        <p id="attendance-error" class="error-text"></p>
+
+        <div id="profile-card" class="profile-card" style="display: none;">
+            <div class="profile-header">
+                <div class="status-indicator" id="p-status-dot"></div>
+                <h3 id="p-status-title">ACCESS GRANTED</h3>
+            </div>
+            <h1 id="p-name">Trainee Name</h1>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">ARRIVAL TIME / STATUS</span>
+                    <span class="stat-value highlight" id="p-time">--:--</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">EXPIRY DATE</span>
+                    <span class="stat-value" id="p-expiry">--</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">REMAINING DUES</span>
+                    <span class="stat-value" id="p-dues">--</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">PHONE</span>
+                    <span class="stat-value" id="p-phone">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
